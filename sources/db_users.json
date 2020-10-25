@@ -1,0 +1,3 @@
+{"_id":{"$oid":"5e60ec398b47656ba4b8cdce"},"email":"cluemediator","password":"123456"}
+{"_id":{"$oid":"5e6111f1d220de2e002682ca"},"email":"bennav.webdev@gmail.com","password":"sha1$cc68c017$1$91d1af4c12275de0f5605b121f093e31a40891e5","created_at":{"$date":{"$numberLong":"1583419889103"}},"updatedAt":{"$date":{"$numberLong":"1583419889103"}},"__v":{"$numberInt":"0"}}
+{"_id":{"$oid":"5e611585d220de2e002682cb"},"email":"test@test.com","password":"sha1$b5aec579$1$d4b72b436e1c3a4ca6029e416d73abc95482b7dc","created_at":{"$date":{"$numberLong":"1583420805939"}},"updatedAt":{"$date":{"$numberLong":"1583420805939"}},"__v":{"$numberInt":"0"}}
