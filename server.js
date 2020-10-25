@@ -2,9 +2,13 @@
 let express = require("express"),
      mongoose = require("mongoose"),
      bodyParser = require("body-parser"),
-     cors = require('cors');
-     usersRouter = require('./controllers/userController');
+     helmet = require('helmet'),
+     cors = require('cors'),
+     usersRouter = require('./controllers/userController'),
+     app = express();
 
+// Helmet
+app.use(helmet());
 
 //Connexion à la base de donnée
 mongoose.Promise = global.Promise;
@@ -20,7 +24,7 @@ mongoose
      });
 
 //On définit notre objet express nommé app
-const app = express();
+const
 
 //Body Parser
 const urlencodedParser = bodyParser.urlencoded({  extended: true });
