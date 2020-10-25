@@ -1,5 +1,5 @@
 //Définition des modules
-let express = require("express"),
+const express = require("express"),
      mongoose = require("mongoose"),
      bodyParser = require("body-parser"),
      helmet = require('helmet'),
@@ -23,8 +23,6 @@ mongoose
           console.log(e);
      });
 
-//On définit notre objet express nommé app
-const
 
 //Body Parser
 const urlencodedParser = bodyParser.urlencoded({  extended: true });
