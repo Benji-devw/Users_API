@@ -2,6 +2,8 @@ const User = require("../../schema/schemaUser.js");
 const passwordHash = require("password-hash");
 
 async function signup(req, res) {
+     console.log('req.body', req.body);
+     
      const { password, email, username } = req.body;
      if (!email || !password) {
           //Le cas où l'email ou bien le password ne serait pas soumit ou nul
