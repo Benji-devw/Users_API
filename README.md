@@ -5,7 +5,15 @@ nodemon server.js
 
 
 ###### API LOGIN/SIGNUP ######
-navarr.benj 	eee
+{
+	"email": "admin@pm.me",
+	"password": "RootAdmin&"
+}
+{
+  "email": "ben.nav@pm.me",
+  "password": "eee"
+}
+
 
 ### PACKAGE.json ###
 La partie “scripts” permet de définir des alias personnalisés, par exemple :
