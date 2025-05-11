@@ -1,7 +1,7 @@
-const mongoose = require("mongoose");
-const passwordHash = require("password-hash");
-const jwt = require("jwt-simple");
-const config = require("../config/config");
+import mongoose from "mongoose";
+import passwordHash from "password-hash";
+import jwt from "jwt-simple";
+import secret from "../config/config";
 
 const userSchema = mongoose.Schema(
      {
@@ -32,8 +32,8 @@ userSchema.methods = {
           return passwordHash.verify(password, this.password);
      },
      getToken: function () {
-          return jwt.encode(this, config.secret);
+          return jwt.encode(this, secret);
      }
 };
 
-module.exports = mongoose.model("User", userSchema);
+export default mongoose.model("User", userSchema);

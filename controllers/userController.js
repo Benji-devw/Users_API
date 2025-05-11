@@ -1,9 +1,8 @@
-const express = require('express');
-const router = express.Router();
-const User = require('../models/userModel'); // Assure-toi que le chemin est correct
-const jwt = require('jwt-simple');
-const passwordHash = require('password-hash'); // Ou la librairie que tu utilises
-const crypto = require('crypto'); // Pour générer un mot de passe aléatoire
+
+import User from '../models/userModel'; // Assure-toi que le chemin est correct
+import jwt from 'jwt-simple';
+import passwordHash from 'password-hash'; // Ou la librairie que tu utilises
+import crypto from 'crypto'; // Pour générer un mot de passe aléatoire
 
 // Clé secrète pour JWT - À METTRE DANS UNE VARIABLE D'ENVIRONNEMENT EN PRODUCTION
 const JWT_SECRET = process.env.JWT_SECRET || 'TON_SUPER_SECRET_JWT_A_CHANGER';
@@ -21,7 +20,7 @@ async function generateUniqueUsername(firstName, lastName) {
 }
 
 // POST /user/login
-router.post('/login', async (req, res) => {
+const login = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -76,10 +75,10 @@ router.post('/login', async (req, res) => {
     console.error('Login server error:', error);
     res.status(500).json({ message: 'Erreur serveur lors de la connexion.' });
   }
-});
+};
 
 // POST /user/register
-router.post('/register', async (req, res) => {
+const register = async (req, res) => {
   const { email, password, firstName, lastName, username } = req.body;
 
   if (!email || !password || !firstName || !lastName || !username) {
@@ -147,10 +146,10 @@ router.post('/register', async (req, res) => {
     }
     res.status(500).json({ message: 'Erreur serveur lors de l\'inscription.' });
   }
-});
+};
 
 // POST /user/google-login
-router.post('/google-login', async (req, res) => {
+const googleLogin = async (req, res) => {
   console.log(req.body);
   const { email, name, googleId, picture } = req.body;
 
@@ -239,8 +238,13 @@ router.post('/google-login', async (req, res) => {
     }
     res.status(500).json({ message: 'Erreur serveur lors de la connexion Google.' });
   }
-});
+};
 
 // TODO: Ajouter d'autres routes (register, getProfile, etc.)
 
-module.exports = router;
+export default {
+  login,
+  register,
+  googleLogin,
+};
+

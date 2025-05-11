@@ -1,3 +1,1 @@
-module.exports = {
-     "secret": "mediumMernAppCreation"
-}
+export default "mediumMernAppCreation";
