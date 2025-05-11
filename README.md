@@ -1,45 +1,72 @@
+# Vallena Users API
 
-###### RUN ######
+API pour la gestion des utilisateurs du projet Vallena, construite avec Bun, Fastify, et Mongoose.
 
-nodemon server.js
+## Stack Technique
 
+-   **Runtime:** [Bun](https://bun.sh/)
+-   **Framework Web:** [Fastify](https://www.fastify.io/)
+-   **Base de données:** [MongoDB](https://www.mongodb.com/) avec [Mongoose](https://mongoosejs.com/)
+-   **Langage:** TypeScript (pour `index.ts`) et JavaScript
 
-###### API LOGIN/SIGNUP ######
-{
-	"email": "admin@pm.me",
-	"password": "RootAdmin&"
-}
-{
-  "email": "ben.nav@pm.me",
-  "password": "eee"
-}
+## Prérequis
 
+-   [Bun](https://bun.sh/docs/installation) installé globalement.
 
-### PACKAGE.json ###
-La partie “scripts” permet de définir des alias personnalisés, par exemple :
+## Installation
 
-## Express == est un framework aidant à gérer les routes et les middlewares de notre serveur
+1.  Clonez le dépôt (si applicable) ou assurez-vous d'avoir les fichiers du projet.
+2.  Installez les dépendances :
 
-## Body-parser == permet de récupérer facilement les données envoyées sur nos routes notamment lors de l’envoi d’un formulaire.
+```bash
+  bun install
+```
 
-## Mongoose est un module facilitant les interactions entre notre base de donnée mongo et notre serveur.
+## Configuration
 
-## Password-hash est un module permettant de hasher facilement des mots passes 
+Créez un fichier `.env` à la racine du projet et ajoutez les variables d'environnement nécessaires.
 
-## JWT-simple == permet de générer des JSON Web Tokens (JWT) qui permettent par exemple d’authentifier un utilisateur lors d’une requête grâce à un système d’échange de jetons et de vérification d’identité
+Exemple de fichier `.env`:
 
+```env
+# Chaîne de connexion MongoDB (adaptez selon votre configuration locale ou Atlas)
+DATABASE_URL=mongodb://localhost:27017/vallena_users_db
 
+# Clé secrète pour la génération des tokens JWT
+JWT_SECRET=votre_super_secret_jwt_a_changer_en_production
+```
 
+## Lancer l'application
 
+-   **Mode développement (avec watch) :**
 
-npm install
-npm install express
-npm install body-parser
-npm install password-hash
-npm install jwt-simple
-npm install mongoose
-npm i axios
+    ```bash
+    bun run dev
+    ```
 
+    L'API sera généralement accessible sur `http://localhost:8805`.
 
+-   **Mode production :**
+    ```bash
+    bun run start
+    ```
 
+## Endpoints API
 
+Toutes les routes sont préfixées par `/api`.
+
+-   `POST /api/signup` : Créer un nouvel utilisateur.
+-   `POST /api/login` : Connecter un utilisateur existant.
+-   `GET /api/users` : Récupérer la liste de tous les utilisateurs.
+-   `DELETE /api/user/:id` : Supprimer un utilisateur.
+
+## Schémas de Données
+
+-   Le schéma utilisateur principal utilisé par ces routes est défini dans `schema/schemaUser.js`.
+
+## À Faire / Améliorations Potentielles
+
+-   Harmoniser la route de suppression d'utilisateur (`DELETE /api/user`) pour utiliser un paramètre d'URL (ex: `/api/user/:id`) de manière cohérente avec le contrôleur.
+-   Finaliser l'intégration de `models/userModel.js` et `controllers/userController.js` ou les supprimer s'ils ne sont plus pertinents par rapport à `schema/schemaUser.js` et `controllers/account/lib.js`.
+-   Implémenter une validation plus robuste des entrées (par exemple avec les schémas de validation de Fastify).
+-   Ajouter des tests.
