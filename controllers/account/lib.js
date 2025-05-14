@@ -47,6 +47,7 @@ async function signup(req, res) {
 }
 
 async function login(req, res) {
+    console.log("req.body", req.body);
     const { password, email } = req.body;
     if (!email || !password) {
         //Le cas où l'email ou bien le password ne serait pas soumit ou nul
@@ -68,6 +69,7 @@ async function login(req, res) {
         return res.code(200).send({
             token: findUser.getToken(),
             text: "Authentification réussi",
+            user: findUser,
         });
     } catch (error) {
         console.error("Error in login:", error);

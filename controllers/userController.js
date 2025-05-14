@@ -1,13 +1,11 @@
 
-import User from '../models/userModel'; // Assure-toi que le chemin est correct
+import User from '../schema/schemaUser'; // Assure-toi que le chemin est correct
 import jwt from 'jwt-simple';
-import passwordHash from 'password-hash'; // Ou la librairie que tu utilises
-import crypto from 'crypto'; // Pour générer un mot de passe aléatoire
-
-// Clé secrète pour JWT - À METTRE DANS UNE VARIABLE D'ENVIRONNEMENT EN PRODUCTION
+import bcrypt from 'bcryptjs';
+// Secret key for JWT
 const JWT_SECRET = process.env.JWT_SECRET || 'TON_SUPER_SECRET_JWT_A_CHANGER';
 
-// Fonction utilitaire pour générer un username unique
+// Function to generate a unique username
 async function generateUniqueUsername(firstName, lastName) {
   let username = (`${firstName}${lastName}`).toLowerCase().replace(/\s+/g, '');
   let counter = 0;
@@ -19,102 +17,88 @@ async function generateUniqueUsername(firstName, lastName) {
   return tempUsername;
 }
 
-// POST /user/login
+// Router POST /login
 const login = async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email et mot de passe requis.' });
-  }
-
-  try {
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(401).json({ message: 'Identifiants incorrects.' });
+    console.log("req.body", req.body);
+    const { password, email } = req.body;
+    if (!email || !password) {
+        //Case where the email or password is not submitted or null
+        return res.code(400).send({
+            text: "Input incorrect",
+        });
     }
-
-    // Vérifie le mot de passe
-    // Si tu utilises password-hash, il a une méthode verify.
-    // Si tu utilises bcrypt, ce serait bcrypt.compareSync(password, user.password)
-    const isMatch = passwordHash.verify(password, user.password); 
-    // OU si tu as une méthode sur ton modèle User: const isMatch = user.comparePassword(password);
-
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Identifiants incorrects.' });
+    try {
+        // Check if user exists in the database
+        const findUser = await User.findOne({ email });
+        if (!findUser)
+            return res.code(401).send({
+                text: "User not found",
+            });
+        const isMatch = await bcrypt.compare(password, findUser.password);
+        if (!isMatch)
+            return res.code(401).send({
+                text: "Password not found",
+            });
+        return res.code(200).send({
+            token: findUser.getToken(),
+            text: "Authentification réussi",
+            user: findUser,
+        });
+    } catch (error) {
+        console.error("Error in login:", error);
+        return res.code(500).send({
+            error: "Erreur serveur lors de la connexion.",
+        });
     }
+}
 
-    // L'utilisateur est authentifié, génère un token JWT
-    const payload = {
-      sub: user._id,
-      username: user.username,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-      iat: Math.floor(Date.now() / 1000), // issued at
-      // exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // expire dans 24h (optionnel)
-    };
-
-    const token = jwt.encode(payload, JWT_SECRET);
-
-    res.json({
-      token,
-      user: {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role
-      },
-      message: 'Connexion réussie.'
-    });
-
-  } catch (error) {
-    console.error('Login server error:', error);
-    res.status(500).json({ message: 'Erreur serveur lors de la connexion.' });
-  }
-};
-
-// POST /user/register
+// Router POST /register
 const register = async (req, res) => {
-  const { email, password, firstName, lastName, username } = req.body;
+  const { email, password, firstName, lastName, username, avatar, phone, country, bio, role, postalCode, city, address } = req.body;
+
+  console.log("req.body", req.body);
 
   if (!email || !password || !firstName || !lastName || !username) {
-    return res.status(400).json({ 
+    return res.code(400).send({ 
       message: 'Tous les champs obligatoires doivent être fournis (username, email, password, firstName, lastName).' 
     });
-  }
+  } 
 
   try {
-    // Vérifier si l'email ou le username existe déjà
+    // Check if email or username already exists
     const existingUser = await User.findOne({ 
       $or: [{ email }, { username }] 
     });
     
     if (existingUser) {
       if (existingUser.email === email) {
-        return res.status(409).json({ message: 'Un utilisateur avec cet email existe déjà.' });
+        return res.code(409).send({ message: 'Un utilisateur avec cet email existe déjà.' });
       }
       if (existingUser.username === username) {
-        return res.status(409).json({ message: 'Ce nom d\'utilisateur est déjà pris.' });
+        return res.code(409).send({ message: 'Ce nom d\'utilisateur est déjà pris.' });
       }
     }
 
-    // Créer le nouvel utilisateur
+    // Create new user
     const newUser = new User({
       username,
       email,
-      password: passwordHash.generate(password),
+      password: bcrypt.hashSync(password),
       firstName,
       lastName,
-      role: 'user' // Rôle par défaut modifié pour correspondre à l'enum
+      role,
+      avatar,
+      phone,
+      postalCode,
+      city,
+      address,
+      country,
+      bio,
     });
-
+    console.log("newUser", newUser);
     const savedUser = await newUser.save();
-
-    // Générer le token JWT
+    console.log("savedUser", savedUser);
+    // Generate JWT token
     const payload = {
       sub: savedUser._id,
       username: savedUser.username,
@@ -126,121 +110,93 @@ const register = async (req, res) => {
     };
     const token = jwt.encode(payload, JWT_SECRET);
 
-    res.status(201).json({
+    res.code(201).send({
       message: 'Utilisateur créé avec succès.',
       token,
       user: {
         _id: savedUser._id,
-        username: savedUser.username,
         email: savedUser.email,
         firstName: savedUser.firstName,
         lastName: savedUser.lastName,
-        role: savedUser.role
+        username: savedUser.username,
+        avatar: savedUser.avatar,
+        bio: savedUser.bio,
+        role: savedUser.role,
+        phone: savedUser.phone,
+        address: savedUser.address,
+        city: savedUser.city,
+        postalCode: savedUser.postalCode,
+        country: savedUser.country,
       }
     });
 
   } catch (error) {
     console.error('Register server error:', error);
     if (error.name === 'ValidationError') {
-      return res.status(400).json({ message: 'Erreur de validation', errors: error.errors });
+      return res.code(400).send({ message: 'Erreur de validation', errors: error.errors });
     }
-    res.status(500).json({ message: 'Erreur serveur lors de l\'inscription.' });
+    res.code(500).send({ message: 'Erreur serveur lors de l\'inscription.' });
   }
 };
 
-// POST /user/google-login
+// Router POST /google-login
 const googleLogin = async (req, res) => {
-  console.log(req.body);
-  const { email, name, googleId, picture } = req.body;
-
+  const { email, googleId, username, firstName, lastName, picture, phone, country, bio, role, postalCode, city, address } = req.body;
+  console.log("req.body", req.body);
   if (!email || !googleId) {
-    return res.status(400).json({ message: 'Email et googleId sont requis.' });
+    return res.code(400).send({ message: 'Email et googleId sont requis.' });
   }
-
-  try {
-    let user = await User.findOne({ googleId });
-
-    if (!user) {
-      // Essayer de trouver par email si aucun utilisateur avec googleId n'est trouvé
-      user = await User.findOne({ email });
-      if (user) {
-        // L'utilisateur existe par email, lions le compte Google
-        user.googleId = googleId;
-        user.picture = picture || user.picture; // Met à jour l'image si fournie
-        // Si le nom de Google est plus complet, on pourrait le mettre à jour ici aussi
-        // user.firstName = ... (extraire de 'name')
-        // user.lastName = ... (extraire de 'name')
-      } else {
-        // Nouvel utilisateur via Google
-        const nameParts = name ? name.split(' ') : ['Utilisateur', 'Google'];
-        const firstName = nameParts[0];
-        const lastName = nameParts.slice(1).join(' ') || firstName; // Gère les noms simples
-        
-        const username = await generateUniqueUsername(firstName, lastName);
-
-        // Générer un mot de passe aléatoire car le schéma l'exigeait (maintenant optionnel, mais si on veut le peupler)
-        // Ou laisser vide si passwordHash.generate accepte null/undefined et que le schéma password n'est plus requis.
-        // Puisque password est required: false maintenant, on peut ne pas le définir.
-        // let randomPassword = crypto.randomBytes(16).toString('hex');
-        // let hashedPassword = passwordHash.generate(randomPassword);
-
-        user = new User({
-          googleId,
-          email,
-          firstName,
-          lastName,
-          username,
-          picture,
-          // password: hashedPassword, // Seulement si vous voulez le peupler malgré tout
-          role: 'user' // Rôle par défaut
-        });
-      }
-    } else {
-      // L'utilisateur trouvé par googleId, mettre à jour l'image si elle a changé
-      if (picture && user.picture !== picture) {
-        user.picture = picture;
-      }
-      // On pourrait aussi vérifier si le nom/prénom a changé et mettre à jour
+  let user = await User.findOne({ $or: [{ googleId }, { email }] });
+  console.log("user", user);
+  if (!user) {
+    user = new User({
+      email,
+      googleId,
+      username,
+      firstName,
+      lastName,
+      picture,
+      phone,
+      country,
+      bio,
+      role,
+      postalCode,
+      city,
+      address,
+    });
+    console.log("user", user);
+    try {
+      await user.save();
+    } catch (error) {
+      console.error("Error saving user:", error);
+      return res.code(500).send({ message: 'Erreur serveur lors de l\'inscription.' });
     }
-
+  } else if (!user.googleId) {
+    // Associate the googleId if the account existed by email
+    user.googleId = googleId;
     await user.save();
-
-    const payload = {
-      sub: user._id,
-      username: user.username,
+  }
+  // Generate a token if needed
+  const token = user.getToken ? user.getToken() : null;
+  console.log("token", token);
+  res.send({
+    token,
+    user: {
+      _id: user._id,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      role: user.role,
+      username: user.username,
       picture: user.picture,
-      iat: Math.floor(Date.now() / 1000)
-    };
-    const token = jwt.encode(payload, JWT_SECRET);
-
-    res.json({
-      token,
-      user: {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        picture: user.picture
-      },
-      message: 'Connexion Google réussie.'
-    });
-
-  } catch (error) {
-    console.error('Google login server error:', error);
-    if (error.code === 11000) { // Erreur de duplicité (par ex. username)
-        return res.status(409).json({ message: 'Erreur de conflit de données, potentiellement username ou email déjà pris différemment.', details: error.keyValue });
-    }
-    res.status(500).json({ message: 'Erreur serveur lors de la connexion Google.' });
-  }
+      roles: user.roles || ['user'],
+      phone: user.phone,
+      postalCode: user.postalCode,
+      city: user.city,
+      address: user.address,
+    },
+    message: 'Connexion Google réussie.',
+  });
 };
-
-// TODO: Ajouter d'autres routes (register, getProfile, etc.)
 
 export default {
   login,
