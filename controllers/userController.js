@@ -56,8 +56,6 @@ const login = async (req, res) => {
 const register = async (req, res) => {
   const { email, password, firstName, lastName, username, avatar, phone, country, bio, role, postalCode, city, address } = req.body;
 
-  console.log("req.body", req.body);
-
   if (!email || !password || !firstName || !lastName || !username) {
     return res.code(400).send({ 
       message: 'Tous les champs obligatoires doivent être fournis (username, email, password, firstName, lastName).' 
@@ -95,9 +93,7 @@ const register = async (req, res) => {
       country,
       bio,
     });
-    console.log("newUser", newUser);
     const savedUser = await newUser.save();
-    console.log("savedUser", savedUser);
     // Generate JWT token
     const payload = {
       sub: savedUser._id,
@@ -142,12 +138,10 @@ const register = async (req, res) => {
 // Router POST /google-login
 const googleLogin = async (req, res) => {
   const { email, googleId, username, firstName, lastName, picture, phone, country, bio, role, postalCode, city, address } = req.body;
-  console.log("req.body", req.body);
   if (!email || !googleId) {
     return res.code(400).send({ message: 'Email et googleId sont requis.' });
   }
   let user = await User.findOne({ $or: [{ googleId }, { email }] });
-  console.log("user", user);
   if (!user) {
     user = new User({
       email,
@@ -164,7 +158,6 @@ const googleLogin = async (req, res) => {
       city,
       address,
     });
-    console.log("user", user);
     try {
       await user.save();
     } catch (error) {
@@ -178,7 +171,6 @@ const googleLogin = async (req, res) => {
   }
   // Generate a token if needed
   const token = user.getToken ? user.getToken() : null;
-  console.log("token", token);
   res.send({
     token,
     user: {
@@ -201,7 +193,6 @@ const googleLogin = async (req, res) => {
 const deleteUser = async (req, res) => {
   const { id } = req.params;
   try {
-    console.log("userId", id);
     const user = await User.findByIdAndDelete(id);
     if (!user) {
       return res.code(404).send({ message: 'Utilisateur non trouvé.' });
