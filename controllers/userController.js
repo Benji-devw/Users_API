@@ -198,9 +198,25 @@ const googleLogin = async (req, res) => {
   });
 };
 
+const deleteUser = async (req, res) => {
+  const { id } = req.params;
+  try {
+    console.log("userId", id);
+    const user = await User.findByIdAndDelete(id);
+    if (!user) {
+      return res.code(404).send({ message: 'Utilisateur non trouvé.' });
+    }
+    return res.code(200).send({ message: 'Utilisateur supprimé avec succès.' });
+  } catch (error) {
+    console.error('Error deleting user:', error);
+    return res.code(500).send({ message: 'Erreur serveur lors de la suppression de l\'utilisateur.' });
+  }
+};
+
 export default {
   login,
   register,
   googleLogin,
+  deleteUser,
 };
 
